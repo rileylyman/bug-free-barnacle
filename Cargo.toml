@@ -1,0 +1,12 @@
+[package]
+name = "game-engine"
+version = "0.1.0"
+authors = ["rileylyman <rileylyman@berkeley.edu>"]
+edition = "2018"
+
+[dependencies]
+gl = "0.6.0"
+log = "0.4.6"
+
+[dependencies.glfw]
+git = "https://github.com/bjz/glfw-rs.git"
