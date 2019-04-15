@@ -35,8 +35,8 @@ impl Renderer {
         {
             (Some(vao), Some(vbo), Some(shader)) => {
                 unsafe {
-                    vao.bind();
                     vbo.bind();
+                    vao.bind();
                     shader.activate();
                     gl::DrawArrays(gl::TRIANGLES, 0, 3);
                 }
@@ -56,6 +56,14 @@ impl Renderer {
 }
 
 pub fn load_models_from_local_state(r: &mut Renderer, _local: &super::localstate::LocalState) -> () {
+    let vbo = VertexBufferObject::from_data(
+        &vec![
+            -0.5 as gl::types::GLfloat, -0.5, 0.0,
+             0.5, -0.5, 0.0,
+             0.0,  0.5, 0.0,
+        ],
+        9
+    );
     let vao = VertexArrayObject::from_layout(
         vec![
             Attribute {
@@ -65,14 +73,6 @@ pub fn load_models_from_local_state(r: &mut Renderer, _local: &super::localstate
                 ty: gl::FLOAT,
             },
         ]
-    );
-    let vbo = VertexBufferObject::from_data(
-        &vec![
-            -0.5, -0.5, 0.0,
-             0.5, -0.5, 0.0,
-             0.0,  0.5, 0.0,
-        ],
-        9
     );
 
     let vert_shader = Shader::from_source("./renderer/shaders/vert.glsl", Vertex).expect("Vertex shader failed");

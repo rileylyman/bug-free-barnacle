@@ -5,7 +5,7 @@ use std::ffi::CString;
 use gl::types::*;
 
 pub struct ShaderProg {
-    id: u32
+    pub id: u32
 }
 
 impl ShaderProg {
@@ -55,9 +55,9 @@ pub struct Shader {
 
 impl Shader {
     pub fn from_source(file_path: &str, shader_type: ShaderType) -> Result<Self, String> {
-        let shader_id = 0;
+        let mut shader_id;
         unsafe {
-            match shader_type {
+            shader_id = match shader_type {
                 ShaderType::Vertex => gl::CreateShader(gl::VERTEX_SHADER),
                 ShaderType::Fragment => gl::CreateShader(gl::FRAGMENT_SHADER),
             };
@@ -90,7 +90,6 @@ impl Shader {
                ) 
             }
         }
-
     }
 }
 
@@ -135,13 +134,15 @@ fn get_compilation_status(shader_id : u32) -> ShaderCompilationStatus {
     unsafe {
         gl::GetShaderiv(shader_id, gl::COMPILE_STATUS, &mut status);
     }
+
     if status == (gl::TRUE as GLint) {
         return ShaderCompilationStatus::Success;
     }
     let len: usize = 0;
     unsafe {
-        gl::GetShaderiv(shader_id, gl::INFO_LOG_LENGTH, &mut (len as i32));
+        gl::GetShaderiv(shader_id, gl::INFO_LOG_LENGTH, std::mem::transmute(&len));
     }
+
     let buf = vec![0 as u8;len]; 
     unsafe {
         gl::GetShaderInfoLog(

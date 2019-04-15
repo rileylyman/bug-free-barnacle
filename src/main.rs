@@ -1,6 +1,7 @@
 #![feature(rustc_private)]
 #[macro_use]
 extern crate log;
+extern crate simple_logger;
 extern crate glfw;
 extern crate gl; 
 
@@ -17,6 +18,8 @@ use localstate::LocalState;
 use glfw::Context;
 
 fn main() -> Result<(), &'static str> {
+    simple_logger::init().unwrap();
+
     let mut window_state = WindowState::default();
     let mut renderer = Renderer::init_only_once(&mut window_state.window).map_err(|_| "Could not initialize the renderer!")?; 
     let mut local_state = LocalState::new();

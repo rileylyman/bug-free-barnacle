@@ -1,7 +1,7 @@
 use gl::types::*;
 
 pub struct VertexArrayObject {
-    id: u32,
+    pub id: u32,
 }
 
 pub struct Attribute {
@@ -51,7 +51,7 @@ impl VertexArrayObject {
 }
 
 pub struct VertexBufferObject {
-    id: u32
+    pub id: u32
 }
 
 impl VertexBufferObject {
@@ -65,13 +65,13 @@ impl VertexBufferObject {
         }
     }
 
-    pub fn from_data<T>(data: &[T], len: usize) -> Self {
+    pub fn from_data<T: std::fmt::Debug>(data: &[T], len: usize) -> Self {
         let result = VertexBufferObject::new();
         unsafe {
-            gl::BindBuffer(gl::ARRAY_BUFFER, result.id);
+            result.bind();
             gl::BufferData(
                 gl::ARRAY_BUFFER,
-                (len * std::mem::size_of::<GLfloat>()) as GLsizeiptr,
+                (len * std::mem::size_of::<T>()) as GLsizeiptr,
                 std::mem::transmute(&data[0]),
                 gl::STATIC_DRAW
             );
