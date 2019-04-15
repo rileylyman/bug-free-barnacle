@@ -11,7 +11,7 @@ mod localstate;
 
 use input::{get_inputs, UserInput::CloseRequested};
 use window::WindowState;
-use renderer::{clear_screen, Renderer};
+use renderer::{clear_screen, Renderer, load_models_from_local_state, draw_models};
 use localstate::LocalState;
 
 use glfw::Context;
@@ -19,8 +19,12 @@ use glfw::Context;
 fn main() -> Result<(), &'static str> {
     let mut window_state = WindowState::default();
     let mut renderer = Renderer::init_only_once(&mut window_state.window).map_err(|_| "Could not initialize the renderer!")?; 
-    let local_state = LocalState::new();
+    let mut local_state = LocalState::new();
 
+    local_state.add_model("model.obj");
+    //local_state.add_model_matrix("model.obj", ...);
+
+    load_models_from_local_state(&mut renderer, &local_state);
     while !window_state.should_close() {
         let mut inputs = get_inputs(&mut window_state)?;
         for input in inputs.get_all().iter() {
@@ -32,8 +36,9 @@ fn main() -> Result<(), &'static str> {
             }
         }
 
-        window_state.window.swap_buffers();
         clear_screen(&mut renderer, &local_state);
+        draw_models(&mut renderer, &local_state);
+        window_state.window.swap_buffers();
     }
     Ok(())
 }

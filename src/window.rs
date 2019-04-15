@@ -44,6 +44,10 @@ impl WindowState {
     pub fn close(&mut self) -> () {
         self.window.set_should_close(true)
     }
+
+    pub unsafe fn set_framebuffer_size_callback(&mut self, callback: Option<glfw::ffi::GLFWframebuffersizefun>) -> () {
+        unimplemented!()
+    }
 }
 
 impl Default for WindowState {
