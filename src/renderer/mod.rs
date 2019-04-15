@@ -1,12 +1,13 @@
 mod gpu;
 mod shader;
 
-use gpu::{Attribute, VertexBufferObject, VertexArrayObject};
+use gpu::{Attribute, ElementBufferObject, VertexBufferObject, VertexArrayObject};
 use shader::{Shader, ShaderProg, ShaderType::*};
 
 pub struct Renderer {
     vbos: Vec<VertexBufferObject>,
     vaos: Vec<VertexArrayObject>,
+    ebos: Vec<ElementBufferObject>,
     shaders: Vec<ShaderProg>,
 }
 
@@ -22,23 +23,26 @@ impl Renderer {
            Renderer {
                vbos: Vec::new(),
                vaos: Vec::new(),
+               ebos: Vec::new(),
                shaders: Vec::new(),
            }
        )
     }
 
-    pub fn draw(&self, vao_idx: usize, vbo_idx: usize, shader_idx: usize) -> () {
+    pub fn draw(&self, vao_idx: usize, vbo_idx: usize, ebo_idx: usize, shader_idx: usize) -> () {
         match (
             self.vaos.get(vao_idx),
             self.vbos.get(vbo_idx),
+            self.ebos.get(ebo_idx),
             self.shaders.get(shader_idx))
         {
-            (Some(vao), Some(vbo), Some(shader)) => {
+            (Some(vao), Some(vbo), Some(ebo), Some(shader)) => {
                 unsafe {
                     vbo.bind();
                     vao.bind();
+                    ebo.bind();
                     shader.activate();
-                    gl::DrawArrays(gl::TRIANGLES, 0, 3);
+                    gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, std::ptr::null());
                 }
 
             }
@@ -58,11 +62,19 @@ impl Renderer {
 pub fn load_models_from_local_state(r: &mut Renderer, _local: &super::localstate::LocalState) -> () {
     let vbo = VertexBufferObject::from_data(
         &vec![
-            -0.5 as gl::types::GLfloat, -0.5, 0.0,
+            0.5 as gl::types::GLfloat, 0.5, 0.0,
              0.5, -0.5, 0.0,
-             0.0,  0.5, 0.0,
+             -0.5, -0.5, 0.0, 
+             -0.5,  0.5, 0.0,
         ],
-        9
+        12
+    );
+    let ebo = ElementBufferObject::from_indices(
+        &vec![
+            0, 1, 3,
+            1, 2, 3
+        ],
+        6
     );
     let vao = VertexArrayObject::from_layout(
         vec![
@@ -82,11 +94,12 @@ pub fn load_models_from_local_state(r: &mut Renderer, _local: &super::localstate
 
     r.vaos.push(vao);
     r.vbos.push(vbo);
+    r.ebos.push(ebo);
     r.shaders.push(shader);
 }
 
 pub fn draw_models(r: &mut Renderer, _local: &super::localstate::LocalState) -> () {
-    r.draw(0, 0, 0);
+    r.draw(0, 0, 0, 0);
 }
 
 pub fn clear_screen(r: &Renderer, local: &super::localstate::LocalState) -> () {

@@ -83,3 +83,37 @@ impl VertexBufferObject {
         gl::BindBuffer(gl::ARRAY_BUFFER, self.id);
     }
 }
+
+pub struct ElementBufferObject {
+    pub id: u32
+}
+
+impl ElementBufferObject {
+    pub fn new() -> Self {
+        let mut ebo_id = 0;
+        unsafe {
+            gl::GenBuffers(1, &mut ebo_id);
+        }
+        Self {
+            id: ebo_id,
+        }
+    }
+
+    pub fn from_indices(indices: &[GLuint], len: usize) -> Self {
+        let result = ElementBufferObject::new();
+        unsafe {
+            result.bind();
+            gl::BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (len * std::mem::size_of::<GLuint>()) as GLsizeiptr,
+                std::mem::transmute(&indices[0]),
+                gl::STATIC_DRAW
+            );
+        }
+        result
+    }
+
+    pub unsafe fn bind(&self) -> () {
+        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
+    }
+}
