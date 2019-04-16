@@ -1,10 +1,11 @@
 use super::gpu::*;
 use gl::types::*;
+use std::sync::Arc;
 
 pub struct Model {
-    pub buffer: Option<VertexBufferObject>,
-    pub array: Option<VertexArrayObject>,
-    pub indices: Option<ElementBufferObject>,
+    pub buffer: Option<Arc<VertexBufferObject>>,
+    pub array: Option<Arc<VertexArrayObject>>,
+    pub indices: Option<Arc<ElementBufferObject>>,
 }
 
 impl Model {
@@ -20,9 +21,9 @@ impl Model {
         let vbo = VertexBufferObject::from_data(data, data.len());
         let ebo = ElementBufferObject::from_indices(indices, indices.len()); 
         Self {
-            buffer: Some(vbo),
-            array: Some(vao),
-            indices: Some(ebo),
+            buffer: Some(Arc::new(vbo)),
+            array: Some(Arc::new(vao)),
+            indices: Some(Arc::new(ebo)),
         }
     }
 
@@ -36,7 +37,7 @@ impl Model {
             (Some(vbo), Some(vao), Some(ebo)) => {
                 unsafe {
                     ebo.bind();
-                    vao.rebind_to_new_buffer(*vbo);
+                    vao.rebind_to_new_buffer(vbo.clone());
                     vbo.bind();
                 }
                 Ok(())

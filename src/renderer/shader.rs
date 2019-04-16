@@ -8,6 +8,20 @@ pub struct ShaderProg {
     pub id: u32
 }
 
+pub enum ShaderType {
+    Vertex,
+    Fragment
+}
+
+pub struct Shader {
+    id: u32,
+}
+
+enum ShaderCompilationStatus {
+    Success,
+    Failure(String),
+}
+
 impl ShaderProg {
     pub fn from_shaders(shaders: Vec<Shader>) -> Result<Self, String> {
         let mut prog_id = 0;
@@ -44,13 +58,12 @@ impl ShaderProg {
     }
 }
 
-pub enum ShaderType {
-    Vertex,
-    Fragment
-}
-
-pub struct Shader {
-    id: u32,
+impl Drop for ShaderProg {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteProgram(self.id);
+        }
+    }
 }
 
 impl Shader {
@@ -91,11 +104,6 @@ impl Shader {
             }
         }
     }
-}
-
-enum ShaderCompilationStatus {
-    Success,
-    Failure(String),
 }
 
 fn get_link_status(prog_id : u32) -> ShaderCompilationStatus {

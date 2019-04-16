@@ -1,6 +1,6 @@
 use gl::types::*;
+use std::sync::Arc;
 
-#[derive(Clone)]
 pub struct VertexArrayObject {
     pub id: u32,
     pub layout: Vec<Attribute>,
@@ -14,13 +14,11 @@ pub struct Attribute {
     pub ty: GLenum
 }
 
-#[derive(Clone, Copy)]
 pub struct ElementBufferObject {
     pub id: u32,
     pub num_elems: usize,
 }
 
-#[derive(Clone, Copy)]
 pub struct VertexBufferObject {
     pub id: u32
 }
@@ -65,7 +63,7 @@ impl VertexArrayObject {
         );
     }
 
-    pub fn rebind_to_new_buffer(&self, vbo: VertexBufferObject) -> () {
+    pub fn rebind_to_new_buffer(&self, vbo: Arc<VertexBufferObject>) -> () {
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, vbo.id);
             gl::BindVertexArray(self.id);
@@ -80,6 +78,14 @@ impl VertexArrayObject {
 
     pub unsafe fn bind(&self) -> () {
         gl::BindVertexArray(self.id);
+    }
+}
+
+impl Drop for VertexArrayObject {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteVertexArrays(1, &mut self.id);
+        }
     }
 }
 
@@ -113,6 +119,14 @@ impl VertexBufferObject {
     }
 }
 
+impl Drop for VertexBufferObject {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteBuffers(1, &mut self.id);
+        }
+    }
+}
+
 impl ElementBufferObject {
     pub fn new() -> Self {
         let mut ebo_id = 0;
@@ -142,5 +156,13 @@ impl ElementBufferObject {
 
     pub unsafe fn bind(&self) -> () {
         gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id);
+    }
+}
+
+impl Drop for ElementBufferObject {
+    fn drop(&mut self) {
+        unsafe {
+            gl::DeleteBuffers(1, &mut self.id);
+        }
     }
 }

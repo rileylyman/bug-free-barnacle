@@ -5,10 +5,11 @@ pub mod model;
 use model::Model;
 use gpu::{Attribute, ElementBufferObject, VertexBufferObject, VertexArrayObject};
 use shader::{Shader, ShaderProg, ShaderType::*};
+use std::sync::Arc;
 
 pub struct Renderer {
     wireframe: bool,
-    shaders: Vec<ShaderProg>,
+    shaders: Vec<Arc<ShaderProg>>,
     current_shader: usize,
 }
 
@@ -41,12 +42,15 @@ impl Renderer {
             }
             unsafe {
                 model.bind()?;
+                let num_indices = if let Some(ref indices) = model.indices {
+                    indices.num_elems
+                } else {
+                    return Err("Something is wrong with model.is_loaded");
+                };
                 gl::DrawElements(
                     gl::TRIANGLES, 
                     //model.is_loaded guarantees this will not panic
-                    model.indices
-                        .expect("Theres a bug in Model::is_loaded")
-                        .num_elems as i32, 
+                    num_indices as i32,
                     gl::UNSIGNED_INT, 
                     std::ptr::null()
                 );
@@ -109,7 +113,7 @@ pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localst
 
     let shader = ShaderProg::from_shaders(vec![vert_shader, frag_shader]).expect("Could not create shader");
 
-    r.shaders.push(shader);
+    r.shaders.push(Arc::new(shader));
     r.set_current_shader(0);
 }
 
