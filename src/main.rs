@@ -24,10 +24,8 @@ fn main() -> Result<(), &'static str> {
     let mut renderer = Renderer::init_only_once(&mut window_state.window).map_err(|_| "Could not initialize the renderer!")?; 
     let mut local_state = LocalState::new();
 
-    local_state.add_model("model.obj");
-    //local_state.add_model_matrix("model.obj", ...);
-
-    load_models_from_local_state(&mut renderer, &local_state);
+    renderer.toggle_wireframe();
+    load_models_from_local_state(&mut renderer, &mut local_state);
     while !window_state.should_close() {
         let mut inputs = get_inputs(&mut window_state)?;
         for input in inputs.get_all().iter() {

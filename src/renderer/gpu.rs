@@ -1,14 +1,28 @@
 use gl::types::*;
 
+#[derive(Clone)]
 pub struct VertexArrayObject {
     pub id: u32,
+    pub layout: Vec<Attribute>,
 }
 
+#[derive(Clone, Copy)]
 pub struct Attribute {
     pub width: u8,
     pub stride: usize,
     pub start_idx: usize,
     pub ty: GLenum
+}
+
+#[derive(Clone, Copy)]
+pub struct ElementBufferObject {
+    pub id: u32,
+    pub num_elems: usize,
+}
+
+#[derive(Clone, Copy)]
+pub struct VertexBufferObject {
+    pub id: u32
 }
 
 impl VertexArrayObject {
@@ -19,39 +33,54 @@ impl VertexArrayObject {
         }
         Self {
             id: vao_id,
+            layout: Vec::new(),
         }
     }
 
-    pub fn from_layout(attribs: Vec<Attribute>) -> Self {
-        let result = VertexArrayObject::new();
-        for (i, ref attr) in attribs.iter().enumerate() {
+    pub fn from_layout(attribs: &[Attribute]) -> Self {
+        let mut result = VertexArrayObject::new();
+        for (i, attr) in attribs.iter().enumerate() {
             unsafe {
-                result.push_attrib(i, attr); 
+                result.push_attrib(i, *attr); 
             }
         }
         result
     }
 
-    pub unsafe fn push_attrib(&self, idx: usize, attr: &Attribute) -> () {
-       gl::BindVertexArray(self.id);
-       gl::VertexAttribPointer(
-           idx as u32,
-           attr.width as i32,
-           attr.ty,
-           gl::FALSE,
-           attr.stride as i32,
-           std::mem::transmute(attr.start_idx),
-       );
-       gl::EnableVertexAttribArray(idx as u32);
+    pub unsafe fn push_attrib(&mut self, idx: usize, attr: Attribute) -> () {
+        self.layout.push(attr);
+        gl::BindVertexArray(self.id);
+        VertexArrayObject::vertex_attrib_pointer(attr, idx);
+        gl::EnableVertexAttribArray(idx as u32);
+    }
+
+    unsafe fn vertex_attrib_pointer(attr: Attribute, idx: usize) {
+        gl::VertexAttribPointer(
+            idx as u32,
+            attr.width as i32,
+            attr.ty,
+            gl::FALSE,
+            attr.stride as i32,
+            std::mem::transmute(attr.start_idx),
+        );
+    }
+
+    pub fn rebind_to_new_buffer(&self, vbo: VertexBufferObject) -> () {
+        unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, vbo.id);
+            gl::BindVertexArray(self.id);
+        }
+        for (i, attr) in self.layout.iter().enumerate() {
+            unsafe {
+                VertexArrayObject::vertex_attrib_pointer(*attr, i); 
+                gl::EnableVertexAttribArray(i as u32);
+            }
+        }
     }
 
     pub unsafe fn bind(&self) -> () {
         gl::BindVertexArray(self.id);
     }
-}
-
-pub struct VertexBufferObject {
-    pub id: u32
 }
 
 impl VertexBufferObject {
@@ -65,7 +94,7 @@ impl VertexBufferObject {
         }
     }
 
-    pub fn from_data<T: std::fmt::Debug>(data: &[T], len: usize) -> Self {
+    pub fn from_data<T>(data: &[T], len: usize) -> Self {
         let result = VertexBufferObject::new();
         unsafe {
             result.bind();
@@ -84,10 +113,6 @@ impl VertexBufferObject {
     }
 }
 
-pub struct ElementBufferObject {
-    pub id: u32
-}
-
 impl ElementBufferObject {
     pub fn new() -> Self {
         let mut ebo_id = 0;
@@ -96,11 +121,12 @@ impl ElementBufferObject {
         }
         Self {
             id: ebo_id,
+            num_elems: 0,
         }
     }
 
     pub fn from_indices(indices: &[GLuint], len: usize) -> Self {
-        let result = ElementBufferObject::new();
+        let mut result = ElementBufferObject::new();
         unsafe {
             result.bind();
             gl::BufferData(
@@ -110,6 +136,7 @@ impl ElementBufferObject {
                 gl::STATIC_DRAW
             );
         }
+        result.num_elems = len;
         result
     }
 
