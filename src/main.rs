@@ -9,6 +9,7 @@ mod input;
 mod window;
 mod renderer;
 mod localstate;
+mod math;
 
 use input::{get_inputs, UserInput::CloseRequested};
 use window::WindowState;

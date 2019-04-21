@@ -6,14 +6,16 @@ pub struct Model {
     pub buffer: Option<Arc<VertexBufferObject>>,
     pub array: Option<Arc<VertexArrayObject>>,
     pub indices: Option<Arc<ElementBufferObject>>,
+    is_loaded: bool,
 }
 
 impl Model {
     pub fn new_unloaded() -> Self {
         Self { 
-            buffer: None, 
-            indices: None,
-            array : None, 
+            buffer    : None, 
+            indices   : None,
+            array     : None, 
+            is_loaded : false,
         }
     }
 
@@ -21,9 +23,10 @@ impl Model {
         let vbo = VertexBufferObject::from_data(data, data.len());
         let ebo = ElementBufferObject::from_indices(indices, indices.len()); 
         Self {
-            buffer: Some(Arc::new(vbo)),
-            array: Some(Arc::new(vao)),
-            indices: Some(Arc::new(ebo)),
+            buffer  : Some(Arc::new(vbo)),
+            array   : Some(Arc::new(vao)),
+            indices : Some(Arc::new(ebo)),
+            is_loaded: true,
         }
     }
 
@@ -46,11 +49,14 @@ impl Model {
         }
     }
 
-    pub fn is_loaded(&self) -> bool {
-        match (&self.buffer, &self.array, &self.indices) {
-            (Some(_), Some(_), Some(_)) => true,
-            _ => false,
+    pub fn is_loaded(&mut self) -> bool {
+        if !self.is_loaded {
+            self.is_loaded = match (&self.buffer, &self.array, &self.indices) {
+                (Some(_), Some(_), Some(_)) => true,
+                _ => false,
+            };
         }
+        self.is_loaded
     }
 }
 
