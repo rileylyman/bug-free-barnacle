@@ -24,7 +24,7 @@ fn main() -> Result<(), &'static str> {
     let mut renderer = Renderer::init_only_once(&mut window_state.window).map_err(|_| "Could not initialize the renderer!")?; 
     let mut local_state = LocalState::new();
 
-    renderer.toggle_wireframe();
+    //renderer.toggle_wireframe();
     load_models_from_local_state(&mut renderer, &mut local_state);
     while !window_state.should_close() {
         let mut inputs = get_inputs(&mut window_state)?;
@@ -36,7 +36,6 @@ fn main() -> Result<(), &'static str> {
                 _ => {}
             }
         }
-
         clear_screen(&mut renderer, &local_state);
         draw_models(&mut renderer, &local_state);
         window_state.window.swap_buffers();

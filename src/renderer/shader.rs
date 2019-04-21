@@ -17,6 +17,12 @@ pub struct Shader {
     id: u32,
 }
 
+pub enum UniformType {
+    Float(u8),
+    UInt(u8),
+    Int(u8),
+}
+
 enum ShaderCompilationStatus {
     Success,
     Failure(String),
@@ -51,6 +57,44 @@ impl ShaderProg {
                 )
             }
         }
+    }
+    
+    pub unsafe fn uniform_int_array(&self, name: &str, data: &[i32]) -> Result<(), String> {
+        let location = gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr());
+        if location == -1 {
+            return Err(format!("Could not find <{}> on shader program {}", name, self.id));
+        }
+        if data.len() == 1 {
+            gl::Uniform1i(location, data[0]);
+        } else if data.len() == 2 {
+            gl::Uniform2i(location, data[0], data[1]);
+        } else if data.len() == 3 {
+            gl::Uniform3i(location, data[0], data[1], data[2]);
+        } else if data.len() == 4 {
+            gl::Uniform4i(location, data[0], data[1], data[2], data[3]);
+        } else {
+            return Err("Data is too long or too short.".to_string());
+        }
+        Ok(())
+    }
+
+    pub unsafe fn uniform_float_array(&self, name: &str, data: &[f32]) -> Result<(), String> {
+        let location = gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr());
+        if location == -1 {
+            return Err(format!("Could not find <{}> on shader program {}", name, self.id));
+        }
+        if data.len() == 1 {
+            gl::Uniform1f(location, data[0]);
+        } else if data.len() == 2 {
+            gl::Uniform2f(location, data[0], data[1]);
+        } else if data.len() == 3 {
+            gl::Uniform3f(location, data[0], data[1], data[2]);
+        } else if data.len() == 4 {
+            gl::Uniform4f(location, data[0], data[1], data[2], data[3]);
+        } else {
+            return Err("Data is too long or too short.".to_string());
+        }
+        Ok(())
     }
 
     pub unsafe fn activate(&self) -> () {

@@ -8,9 +8,9 @@ use shader::{Shader, ShaderProg, ShaderType::*};
 use std::sync::Arc;
 
 pub struct Renderer {
-    wireframe: bool,
-    shaders: Vec<Arc<ShaderProg>>,
-    current_shader: usize,
+    wireframe     : bool,
+    shaders       : Vec<Arc<ShaderProg>>,
+    shader_idx    : usize,
 }
 
 impl Renderer {
@@ -23,26 +23,21 @@ impl Renderer {
        }
        Ok(
            Renderer {
-               wireframe: false,
-               shaders: Vec::new(),
-               current_shader: 0,
+               wireframe     : false,
+               shaders       : Vec::new(),
+               shader_idx    : 0,
            }
        )
     }
 
-    pub fn draw_model(&self, model: &Model) -> Result<(), &'static str> {
+    pub fn draw_model(&mut self, bound_model: &Model) -> Result<(), &'static str> {
 
-        if model.is_loaded() {
-            if let Some(shader) = self.shaders.get(self.current_shader) {
-                unsafe {
-                    shader.activate();
-                }
-            } else {
-                return Err("Invalid current shader index");
-            }
+        if !bound_model.is_loaded() {
+            return Err("Model is not loaded");
+        }
+        if let Some(shader) = self.shaders.get(self.shader_idx) {
             unsafe {
-                model.bind()?;
-                let num_indices = if let Some(ref indices) = model.indices {
+                let num_indices = if let Some(ref indices) = bound_model.indices {
                     indices.num_elems
                 } else {
                     return Err("Something is wrong with model.is_loaded");
@@ -57,6 +52,18 @@ impl Renderer {
             }
         }
         Ok(())
+    }
+
+    pub fn use_shader_idx(&mut self, shader_idx: usize) -> Result<(), &'static str> {
+        if let Some(shader) = self.shaders.get(shader_idx) {
+            self.shader_idx = shader_idx;
+            unsafe {
+                shader.activate();
+            }
+            Ok(())
+        } else {
+            Err("Could not activate given shader")
+        }
     }
 
     pub fn toggle_wireframe(&mut self) -> () {
@@ -77,32 +84,33 @@ impl Renderer {
         gl::Clear(gl::COLOR_BUFFER_BIT);
     }
 
-    pub fn set_current_shader(&mut self, new_idx: usize) -> () {
-        if let Some(shader) = self.shaders.get(new_idx) {
-            self.current_shader = new_idx;
-        }
-    }
 }
 
 pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localstate::LocalState) -> () {
     let model = Model::from_data_and_layout(
         &vec![
-            0.5 as gl::types::GLfloat, 0.5, 0.0,
-             0.5, -0.5, 0.0,
-             -0.5, -0.5, 0.0, 
-             -0.5,  0.5, 0.0,
+            0.5 as gl::types::GLfloat, 0.5, 0.0, 1.0, 0.0, 0.0,
+             0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
+             -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 
+             -0.5,  0.5, 0.0, 0.3, 0.4, 0.5,
         ],
         &vec![
             0, 1, 3,
             1, 2, 3
         ],
         &vec![
-            Attribute {
+            Attribute { // attribute 0: pos
                 width: 3,
-                stride: 3 * std::mem::size_of::<gl::types::GLfloat>(),
+                stride: 6 * std::mem::size_of::<gl::types::GLfloat>(),
                 start_idx: 0,
                 ty: gl::FLOAT,
             },
+            Attribute { // attribute 1: color
+                width: 3,
+                stride: 6 * std::mem::size_of::<gl::types::GLfloat>(),
+                start_idx: 3 * std::mem::size_of::<gl::types::GLfloat>(),
+                ty: gl::FLOAT,
+            }
         ]
     );
 
@@ -114,13 +122,15 @@ pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localst
     let shader = ShaderProg::from_shaders(vec![vert_shader, frag_shader]).expect("Could not create shader");
 
     r.shaders.push(Arc::new(shader));
-    r.set_current_shader(0);
+    r.use_shader_idx(0);
 }
 
-pub fn draw_models(r: &mut Renderer, local: &super::localstate::LocalState) -> () {
+pub fn draw_models(r: &mut Renderer, local: &super::localstate::LocalState) -> Result<(), &'static str> {
     for model in local.models.iter() {
+        model.bind()?;
         r.draw_model(model);
     }
+    Ok(())
 }
 
 pub fn clear_screen(r: &Renderer, local: &super::localstate::LocalState) -> () {

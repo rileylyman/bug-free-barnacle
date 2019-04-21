@@ -8,7 +8,7 @@ pub struct LocalState {
 impl LocalState {
     pub fn new() -> Self {
         LocalState {
-            clear_color: [0.5, 0.0, 0.3, 1.0],
+            clear_color: [0.1, 0.1, 0.1, 1.0],
             models: Vec::new(),
         }
     }
