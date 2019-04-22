@@ -3,6 +3,7 @@ mod shader;
 pub mod model;
 
 use model::Model;
+use super::math::Mat4;
 use gpu::{Attribute, ElementBufferObject, VertexBufferObject, VertexArrayObject};
 use shader::{Shader, ShaderProg, ShaderType::*};
 use std::sync::Arc;
@@ -10,7 +11,8 @@ use std::sync::Arc;
 pub struct Renderer {
     wireframe     : bool,
     shaders       : Vec<Arc<ShaderProg>>,
-    shader_idx    : usize,
+    shader_idx    : i32,
+    matrix        : Mat4, 
 }
 
 impl Renderer {
@@ -25,18 +27,22 @@ impl Renderer {
            Renderer {
                wireframe     : false,
                shaders       : Vec::new(),
-               shader_idx    : 0,
+               shader_idx    : -1,
+               matrix        : Mat4::identity(),
            }
        )
     }
 
-    pub fn draw_model(&mut self, bound_model: &Model) -> Result<(), &'static str> {
+    pub fn draw_model(&mut self, bound_model: &mut Model) -> Result<(), &'static str> {
 
         if !bound_model.is_loaded() {
             return Err("Model is not loaded");
         }
-        if let Some(shader) = self.shaders.get(self.shader_idx) {
+        if let Some(shader) = self.shaders.get(self.shader_idx as usize) {
             unsafe {
+                //self.matrix = self.matrix.clone().rotate_radians(0.001, super::math::Axis::X);
+                //println!("Matrix: {:?}", self.matrix.get());
+                shader.uniform_matrix4f("model", self.matrix.get()).unwrap();
                 let num_indices = if let Some(ref indices) = bound_model.indices {
                     indices.num_elems
                 } else {
@@ -54,8 +60,8 @@ impl Renderer {
         Ok(())
     }
 
-    pub fn use_shader_idx(&mut self, shader_idx: usize) -> Result<(), &'static str> {
-        if let Some(shader) = self.shaders.get(shader_idx) {
+    pub fn use_shader_idx(&mut self, shader_idx: i32) -> Result<(), &'static str> {
+        if let Some(shader) = self.shaders.get(shader_idx as usize) {
             self.shader_idx = shader_idx;
             unsafe {
                 shader.activate();
@@ -125,8 +131,8 @@ pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localst
     r.use_shader_idx(0);
 }
 
-pub fn draw_models(r: &mut Renderer, local: &super::localstate::LocalState) -> Result<(), &'static str> {
-    for model in local.models.iter() {
+pub fn draw_models(r: &mut Renderer, local: &mut super::localstate::LocalState) -> Result<(), &'static str> {
+    for model in local.models.iter_mut() {
         model.bind()?;
         r.draw_model(model);
     }

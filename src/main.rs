@@ -4,6 +4,7 @@ extern crate log;
 extern crate simple_logger;
 extern crate glfw;
 extern crate gl; 
+extern crate packed_simd;
 
 mod input;
 mod window;
@@ -15,6 +16,7 @@ use input::{get_inputs, UserInput::CloseRequested};
 use window::WindowState;
 use renderer::{clear_screen, Renderer, load_models_from_local_state, draw_models};
 use localstate::LocalState;
+use math::Mat4;
 
 use glfw::Context;
 
@@ -38,7 +40,7 @@ fn main() -> Result<(), &'static str> {
             }
         }
         clear_screen(&mut renderer, &local_state);
-        draw_models(&mut renderer, &local_state);
+        draw_models(&mut renderer, &mut local_state);
         window_state.window.swap_buffers();
     }
     Ok(())

@@ -48,6 +48,7 @@ dependencies = [
  "gl 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "glfw 0.26.1 (git+https://github.com/bjz/glfw-rs.git)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "packed_simd 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "simple_logger 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -193,6 +194,14 @@ version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "packed_simd"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cfg-if 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.1.54"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -275,6 +284,7 @@ dependencies = [
 "checksum num-rational 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4e96f040177bb3da242b5b1ecf3f54b5d5af3efbbfb18608977a5d2767b22f10"
 "checksum num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)" = "92e5113e9fd4cc14ded8e499429f396a20f98c772a47cc8622a736e1ec843c31"
 "checksum num-traits 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0b3a5d7cc97d6d30d8b9bc8fa19bf45349ffe46241e8816f50f62f6d6aaabee1"
+"checksum packed_simd 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a85ea9fc0d4ac0deb6fe7911d38786b32fc11119afd9e9d38b84ff691ce64220"
 "checksum redox_syscall 0.1.54 (registry+https://github.com/rust-lang/crates.io-index)" = "12229c14a0f65c4f1cb046a3b52047cdd9da1f4b30f8a39c5063c8bae515e252"
 "checksum semver 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2d5b7638a1f03815d94e88cb3b3c08e87f0db4d683ef499d1836aaf70a45623f"
 "checksum simple_logger 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "25111f1d77db1ac3ee11b62ba4b7a162e6bb3be43e28273f0d3935cc8d3ff7fb"

@@ -97,6 +97,18 @@ impl ShaderProg {
         Ok(())
     }
 
+    pub unsafe fn uniform_matrix4f(&self, name: &str, data: &[f64]) -> Result<(), String> {
+        let location = gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr());
+        if location == -1 {
+            return Err(format!("Could not find <{}> on shader program {}", name, self.id));
+        }
+        if data.len() != 16 {
+           return Err("Matrix not 4x4!".into()); 
+        }
+        println!("Data: {:?}", data);
+        Ok(gl::UniformMatrix4dv(location, 1, gl::TRUE, std::mem::transmute(&data[0])))
+    }
+
     pub unsafe fn activate(&self) -> () {
        gl::UseProgram(self.id); 
     }
