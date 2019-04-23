@@ -8,14 +8,14 @@ pub struct WindowState {
     pub window: Window,
 }
 
-fn glfw_error_callback(err: glfw::Error, desc: String, count: &Cell<usize>) -> () {
-    panic!("GLFW Error {:?}: {:?}", count.get(), desc);
+fn glfw_error_callback(_err: glfw::Error, desc: String, count: &Cell<usize>) -> () {
     count.set(count.get() + 1);
+    panic!("GLFW Error {:?}: {:?}", count.get(), desc);
 }
 
 impl WindowState {
     pub fn new(width: u32, height: u32, name: &'static str, window_mode: glfw::WindowMode) -> Result<Self, &'static str> {
-        let  mut glfw = glfw::init(
+        let glfw = glfw::init(
             Some(glfw::Callback {
                 f: glfw_error_callback as fn(glfw::Error, String, &Cell<usize>),
                 data: Cell::new(0),
@@ -45,7 +45,8 @@ impl WindowState {
         self.window.set_should_close(true)
     }
 
-    pub unsafe fn set_framebuffer_size_callback(&mut self, callback: Option<glfw::ffi::GLFWframebuffersizefun>) -> () {
+    #[allow(dead_code)]
+    pub unsafe fn set_framebuffer_size_callback(&mut self, _callback: Option<glfw::ffi::GLFWframebuffersizefun>) -> () {
         unimplemented!()
     }
 }

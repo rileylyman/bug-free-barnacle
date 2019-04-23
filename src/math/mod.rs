@@ -1,13 +1,15 @@
+#![allow(dead_code)]
+
 use packed_simd::{
-    f64x4,
-    m64x4,
+    f32x4,
+    m32x4,
     cptrx4,
 };
 
 use std::ops::Mul;
 
-const MASK3T1F : m64x4 = m64x4::new(true, true, true, false);
-const MASK4T   : m64x4 = m64x4::new(true, true, true, true);
+const MASK3T1F : m32x4 = m32x4::new(true, true, true, false);
+const MASK4T   : m32x4 = m32x4::new(true, true, true, true);
 
 pub enum Axis {
     X,
@@ -17,8 +19,8 @@ pub enum Axis {
 
 #[derive(Clone)]
 pub struct Mat4 {
-    data  : [f64;16],
-    rows  : [f64x4;4],
+    data  : [f32;16],
+    rows  : [f32x4;4],
     dirty : bool,
 }
 
@@ -26,19 +28,19 @@ impl Mat4 {
     pub fn new() -> Self {
         Mat4 {
             data   : [0.; 16],
-            rows   : [f64x4::splat(0.);4],
+            rows   : [f32x4::splat(0.);4],
             dirty  : false,
         }
     }
 
-    pub fn from_data(data: [f64;16]) -> Self {
+    pub fn from_data(data: [f32;16]) -> Self {
         Mat4 {
             data  : data,
             rows  : [
-                f64x4::from_slice_unaligned(&data[..4]),
-                f64x4::from_slice_unaligned(&data[4..8]),
-                f64x4::from_slice_unaligned(&data[8..12]),
-                f64x4::from_slice_unaligned(&data[12..]),
+                f32x4::from_slice_unaligned(&data[..4]),
+                f32x4::from_slice_unaligned(&data[4..8]),
+                f32x4::from_slice_unaligned(&data[8..12]),
+                f32x4::from_slice_unaligned(&data[12..]),
             ],
             dirty : false,
         }
@@ -53,16 +55,16 @@ impl Mat4 {
                 0.0, 0.0, 0.0, 1.0,
             ],
             rows : [
-                f64x4::new(1.0, 0.0, 0.0, 0.0),
-                f64x4::new(0.0, 1.0, 0.0, 0.0),
-                f64x4::new(0.0, 0.0, 1.0, 0.0),
-                f64x4::new(0.0, 0.0, 0.0, 1.0),
+                f32x4::new(1.0, 0.0, 0.0, 0.0),
+                f32x4::new(0.0, 1.0, 0.0, 0.0),
+                f32x4::new(0.0, 0.0, 1.0, 0.0),
+                f32x4::new(0.0, 0.0, 0.0, 1.0),
             ],
             dirty  : false,
         }
     }
     
-    pub fn get(&mut self) -> &[f64] {
+    pub fn get(&mut self) -> &[f32] {
         if self.dirty {
             self.flush_rows();
         }
@@ -77,14 +79,15 @@ impl Mat4 {
         self.dirty = false;
     }
 
-    pub fn translate(&mut self, x : f64, y: f64, z: f64) -> &mut Self {
-        let vec = f64x4::new(x, y, z, 0.0); 
+    pub fn translate(&mut self, x : f32, y: f32, z: f32) -> &mut Self {
+        //TODO: Incorrect
+        let vec = f32x4::new(x, y, z, 0.0); 
         self.rows[3] += vec;
         self.dirty = true;
         self
     }
 
-    pub fn stretch(&mut self, x : f64, y : f64, z: f64) -> &mut Self {
+    pub fn stretch(&mut self, x : f32, y : f32, z: f32) -> &mut Self {
         //@Inefficient?
         self.rows[0] = self.rows[0].replace(0, self.rows[0].extract(0) * x);
         self.rows[1] = self.rows[1].replace(1, self.rows[1].extract(1) * y);
@@ -93,7 +96,7 @@ impl Mat4 {
         self
     }
 
-    pub fn rotate_radians(self, radians: f64, axis: Axis) -> Self { 
+    pub fn rotate_radians(self, radians: f32, axis: Axis) -> Self { 
         match axis {
             Axis::X => {
                 x_axis_rotation(radians) * self
@@ -108,13 +111,13 @@ impl Mat4 {
     }
 }
 
-const X_ROT_DAT: [f64;16] = [
+const X_ROT_DAT: [f32;16] = [
     1.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 1.0,
 ];
-fn x_axis_rotation(rads: f64) -> Mat4 {
+fn x_axis_rotation(rads: f32) -> Mat4 {
     let mut x_rot = X_ROT_DAT;
     x_rot[5] = rads.cos();
     x_rot[6] = -rads.sin();
@@ -123,13 +126,13 @@ fn x_axis_rotation(rads: f64) -> Mat4 {
     Mat4::from_data(x_rot)
 }
 
-const Y_ROT_DAT: [f64;16] = [
+const Y_ROT_DAT: [f32;16] = [
     0.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 1.0,
 ];
-fn y_axis_rotation(rads: f64) -> Mat4 {
+fn y_axis_rotation(rads: f32) -> Mat4 {
     let mut y_rot = Y_ROT_DAT;
     y_rot[0] = rads.cos();
     y_rot[2] = rads.sin();
@@ -138,13 +141,13 @@ fn y_axis_rotation(rads: f64) -> Mat4 {
     Mat4::from_data(y_rot)
 }
 
-const Z_ROT_DAT: [f64;16] = [
+const Z_ROT_DAT: [f32;16] = [
     0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0,
 ];
-fn z_axis_rotation(rads: f64) -> Mat4 {
+fn z_axis_rotation(rads: f32) -> Mat4 {
     let mut z_rot = Z_ROT_DAT;
     z_rot[0] = rads.cos();
     z_rot[1] = -rads.sin();
@@ -160,7 +163,7 @@ impl Mul for Mat4 {
     //@Inefficient: Need strided loads!!!!!!!!!
     fn mul(self, right: Self) -> Self {
         let rcols = unsafe {
-            let default = f64x4::splat(0.);
+            let default = f32x4::splat(0.);
             let ptr0 = cptrx4::new(
                 &right.data[0],
                 &right.data[4],

@@ -30,7 +30,7 @@ enum ShaderCompilationStatus {
 
 impl ShaderProg {
     pub fn from_shaders(shaders: Vec<Shader>) -> Result<Self, String> {
-        let mut prog_id = 0;
+        let prog_id;
         unsafe {
             prog_id = gl::CreateProgram();
         }
@@ -58,7 +58,8 @@ impl ShaderProg {
             }
         }
     }
-    
+   
+    #[allow(dead_code)]
     pub unsafe fn uniform_int_array(&self, name: &str, data: &[i32]) -> Result<(), String> {
         let location = gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr());
         if location == -1 {
@@ -78,6 +79,7 @@ impl ShaderProg {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub unsafe fn uniform_float_array(&self, name: &str, data: &[f32]) -> Result<(), String> {
         let location = gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr());
         if location == -1 {
@@ -97,7 +99,8 @@ impl ShaderProg {
         Ok(())
     }
 
-    pub unsafe fn uniform_matrix4f(&self, name: &str, data: &[f64]) -> Result<(), String> {
+    #[allow(dead_code)]
+    pub unsafe fn uniform_matrix4f(&self, name: &str, data: &[f32]) -> Result<(), String> {
         let location = gl::GetUniformLocation(self.id, CString::new(name).unwrap().as_ptr());
         if location == -1 {
             return Err(format!("Could not find <{}> on shader program {}", name, self.id));
@@ -106,7 +109,7 @@ impl ShaderProg {
            return Err("Matrix not 4x4!".into()); 
         }
         println!("Data: {:?}", data);
-        Ok(gl::UniformMatrix4dv(location, 1, gl::TRUE, std::mem::transmute(&data[0])))
+        Ok(gl::UniformMatrix4fv(location, 1, gl::TRUE, std::mem::transmute(&data[0])))
     }
 
     pub unsafe fn activate(&self) -> () {
@@ -124,7 +127,7 @@ impl Drop for ShaderProg {
 
 impl Shader {
     pub fn from_source(file_path: &str, shader_type: ShaderType) -> Result<Self, String> {
-        let mut shader_id;
+        let shader_id;
         unsafe {
             shader_id = match shader_type {
                 ShaderType::Vertex => gl::CreateShader(gl::VERTEX_SHADER),

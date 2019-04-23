@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 mod gpu;
 mod shader;
 pub mod model;
@@ -40,9 +42,12 @@ impl Renderer {
         }
         if let Some(shader) = self.shaders.get(self.shader_idx as usize) {
             unsafe {
-                //self.matrix = self.matrix.clone().rotate_radians(0.001, super::math::Axis::X);
-                //println!("Matrix: {:?}", self.matrix.get());
+                //self.matrix = self.matrix.clone()
+                //    .rotate_radians(0.0001, super::math::Axis::Z);
+                //self.matrix.stretch(1.00001, 1.00001, 1.0);
+                //self.matrix.translate(1.000001, 0.0, 0.0);
                 shader.uniform_matrix4f("model", self.matrix.get()).unwrap();
+                shader.uniform_float_array("c", &[0.4]).unwrap();
                 let num_indices = if let Some(ref indices) = bound_model.indices {
                     indices.num_elems
                 } else {
@@ -92,7 +97,7 @@ impl Renderer {
 
 }
 
-pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localstate::LocalState) -> () {
+pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localstate::LocalState) -> Result<(), String> {
     let model = Model::from_data_and_layout(
         &vec![
             0.5 as gl::types::GLfloat, 0.5, 0.0, 1.0, 0.0, 0.0,
@@ -122,19 +127,20 @@ pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localst
 
     local.add_model_moves(model);
 
-    let vert_shader = Shader::from_source("./renderer/shaders/vert.glsl", Vertex).expect("Vertex shader failed");
-    let frag_shader = Shader::from_source("./renderer/shaders/frag.glsl", Fragment).expect("Fragment shader failed");
+    let vert_shader = Shader::from_source("./renderer/shaders/vert.glsl", Vertex)?;
+    let frag_shader = Shader::from_source("./renderer/shaders/frag.glsl", Fragment)?;
 
-    let shader = ShaderProg::from_shaders(vec![vert_shader, frag_shader]).expect("Could not create shader");
+    let shader = ShaderProg::from_shaders(vec![vert_shader, frag_shader])?;
 
     r.shaders.push(Arc::new(shader));
-    r.use_shader_idx(0);
+    r.use_shader_idx(0)?;
+    Ok(())
 }
 
 pub fn draw_models(r: &mut Renderer, local: &mut super::localstate::LocalState) -> Result<(), &'static str> {
     for model in local.models.iter_mut() {
         model.bind()?;
-        r.draw_model(model);
+        r.draw_model(model)?;
     }
     Ok(())
 }

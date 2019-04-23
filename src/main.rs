@@ -1,3 +1,6 @@
+#![allow(unused_imports)]
+#![allow(unreachable_patterns)]
+
 #![feature(rustc_private)]
 #[macro_use]
 extern crate log;
@@ -28,7 +31,7 @@ fn main() -> Result<(), &'static str> {
     let mut local_state = LocalState::new();
 
     //renderer.toggle_wireframe();
-    load_models_from_local_state(&mut renderer, &mut local_state);
+    load_models_from_local_state(&mut renderer, &mut local_state).unwrap();
     while !window_state.should_close() {
         let mut inputs = get_inputs(&mut window_state)?;
         for input in inputs.get_all().iter() {
@@ -40,7 +43,7 @@ fn main() -> Result<(), &'static str> {
             }
         }
         clear_screen(&mut renderer, &local_state);
-        draw_models(&mut renderer, &mut local_state);
+        draw_models(&mut renderer, &mut local_state).unwrap();
         window_state.window.swap_buffers();
     }
     Ok(())
