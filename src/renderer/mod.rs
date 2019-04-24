@@ -6,6 +6,7 @@ pub mod model;
 
 use model::Model;
 use super::math::Mat4;
+use std::path::Path;
 use gpu::{Attribute, ElementBufferObject, VertexBufferObject, VertexArrayObject};
 use shader::{Shader, ShaderProg, ShaderType::*};
 use std::sync::Arc;
@@ -42,8 +43,8 @@ impl Renderer {
         }
         if let Some(shader) = self.shaders.get(self.shader_idx as usize) {
             unsafe {
-                //self.matrix = self.matrix.clone()
-                //    .rotate_radians(0.0001, super::math::Axis::Z);
+                self.matrix = self.matrix.clone()
+                    .rotate_radians(0.0001, super::math::Axis::X);
                 //self.matrix.stretch(1.00001, 1.00001, 1.0);
                 //self.matrix.translate(1.000001, 0.0, 0.0);
                 shader.uniform_matrix4f("model", self.matrix.get()).unwrap();
@@ -98,32 +99,33 @@ impl Renderer {
 }
 
 pub fn load_models_from_local_state(r: &mut Renderer, local: &mut super::localstate::LocalState) -> Result<(), String> {
-    let model = Model::from_data_and_layout(
-        &vec![
-            0.5 as gl::types::GLfloat, 0.5, 0.0, 1.0, 0.0, 0.0,
-             0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
-             -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 
-             -0.5,  0.5, 0.0, 0.3, 0.4, 0.5,
-        ],
-        &vec![
-            0, 1, 3,
-            1, 2, 3
-        ],
-        &vec![
-            Attribute { // attribute 0: pos
-                width: 3,
-                stride: 6 * std::mem::size_of::<gl::types::GLfloat>(),
-                start_idx: 0,
-                ty: gl::FLOAT,
-            },
-            Attribute { // attribute 1: color
-                width: 3,
-                stride: 6 * std::mem::size_of::<gl::types::GLfloat>(),
-                start_idx: 3 * std::mem::size_of::<gl::types::GLfloat>(),
-                ty: gl::FLOAT,
-            }
-        ]
-    );
+    let model = model::obj::load(Path::new("res/sample.obj")).unwrap();
+    //let model = Model::from_data_and_layout(
+    //    &vec![
+    //        0.5 as gl::types::GLfloat, 0.5, 1.0, 1.0, 0.0, 0.0,
+    //         0.5, -0.5, 0.0, 0.0, 1.0, 0.0,
+    //         -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 
+    //         -0.5,  0.5, -1.0, 0.3, 0.4, 0.5,
+    //    ],
+    //    &vec![
+    //        0, 1, 3,
+    //        1, 2, 3
+    //    ],
+    //    &vec![
+    //        Attribute { // attribute 0: pos
+    //            width: 3,
+    //            stride: 6 * std::mem::size_of::<gl::types::GLfloat>(),
+    //            start_idx: 0,
+    //            ty: gl::FLOAT,
+    //        },
+    //        Attribute { // attribute 1: color
+    //            width: 3,
+    //            stride: 6 * std::mem::size_of::<gl::types::GLfloat>(),
+    //            start_idx: 3 * std::mem::size_of::<gl::types::GLfloat>(),
+    //            ty: gl::FLOAT,
+    //        }
+    //    ]
+    //);
 
     local.add_model_moves(model);
 

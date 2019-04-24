@@ -108,7 +108,6 @@ impl ShaderProg {
         if data.len() != 16 {
            return Err("Matrix not 4x4!".into()); 
         }
-        println!("Data: {:?}", data);
         Ok(gl::UniformMatrix4fv(location, 1, gl::TRUE, std::mem::transmute(&data[0])))
     }
 
